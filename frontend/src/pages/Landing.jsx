@@ -5,6 +5,7 @@ import WhoAmI from "../components/Landing/WhoAmI";
 import FeatureGrid from "../components/Landing/FeatureGrid";
 import ProductPreviews from "../components/Landing/ProductPreviews";
 import HowItWorks from "../components/Landing/HowItWorks";
+import CTAAndFooter from "../components/Landing/Cta";
 
 function Landing() {
   return (
@@ -15,6 +16,7 @@ function Landing() {
         <FeatureGrid />
         <ProductPreviews />
         <HowItWorks/>
+        <CTAAndFooter/>
     </div>
   );
 }
