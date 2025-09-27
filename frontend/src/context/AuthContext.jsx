@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await supabase.auth.getSession();
       const currentUser = data.session?.user ?? null;
       setUser(currentUser);
+      console.info("Auth state changed:", _event, currentUser);
 
       if (currentUser) {
         const { data: profile } = await supabase
@@ -28,6 +29,8 @@ export const AuthProvider = ({ children }) => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
+      console.log(role)
+      console.info("Auth state changed:", _event, currentUser);
     });
 
     return () => listener.subscription.unsubscribe();
