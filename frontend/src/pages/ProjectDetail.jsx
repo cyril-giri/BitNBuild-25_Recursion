@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import ProjectCard from "../components/ProjectDetailPage/ProjectCard";
 import BidList from "../components/ProjectDetailPage/BidList";
 import {Button} from "../components/ui/button";
+import LoggedInNavbar from "../components/LoggedInNavbar";
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -92,20 +93,23 @@ const ProjectDetail = () => {
   if (!project) return <div className="text-neutral-400">Project not found.</div>;
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
-      <ProjectCard project={project} />
-      <div className="flex justify-between items-center mt-8 mb-4">
-        <h2 className="text-2xl font-semibold text-white">Bids</h2>
-        <Button variant="destructive" onClick={handleCancelProject}>
-          Cancel Project
-        </Button>
+    <>
+      <LoggedInNavbar />
+      <div className="max-w-4xl mx-auto py-10 px-4">
+        <ProjectCard project={project} />
+        <div className="flex justify-between items-center mt-8 mb-4">
+          <h2 className="text-2xl font-semibold text-white">Bids</h2>
+          <Button variant="destructive" onClick={handleCancelProject}>
+            Cancel Project
+          </Button>
+        </div>
+        <BidList
+          bids={bids || []}
+          onAccept={handleAcceptBid}
+          projectStatus={project.status}
+        />
       </div>
-      <BidList
-        bids={bids || []}
-        onAccept={handleAcceptBid}
-        projectStatus={project.status}
-      />
-    </div>
+    </>
   );
 };
 

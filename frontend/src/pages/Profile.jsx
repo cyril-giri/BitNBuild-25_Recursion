@@ -1,8 +1,12 @@
-import React from 'react'
+import React from 'react';
+import LoggedInNavbar from '../components/LoggedInNavbar'
 
 function Profile() {
   return (
-    <div>Profile</div>
+    <div>
+      <LoggedInNavbar />
+      <h1>Profile</h1>
+    </div>
   )
 }
 

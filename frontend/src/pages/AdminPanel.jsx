@@ -1,8 +1,12 @@
-import React from 'react'
+import React from 'react';
+import LoggedInNavbar from '../components/LoggedInNavbar'
 
 function AdminPanel() {
   return (
-    <div>AdminPanel</div>
+    <div>
+      <LoggedInNavbar />
+      <h1>AdminPanel</h1>
+    </div>
   )
 }
 

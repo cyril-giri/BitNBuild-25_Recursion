@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useApi } from "../lib/useApi"; 
+import LoggedInNavbar from "../components/LoggedInNavbar";
 
 // Import the child components
 import ProjectDetailsInput from "../components/Projects/ProjectDetailsInput";
@@ -74,15 +75,18 @@ export default function PostProject() {
 
   if (role && role !== "client") {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="p-8 rounded shadow text-center">
-          <h2 className="text-2xl font-bold">Access Denied</h2>
-          <p>Only clients can post new projects.</p>
-          <button onClick={() => navigate('/dashboard')} className="mt-4 bg-cyan-500 text-white py-2 px-4 rounded">
-            Go to Dashboard
-          </button>
+      <>
+        <LoggedInNavbar />
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="p-8 rounded shadow text-center">
+            <h2 className="text-2xl font-bold">Access Denied</h2>
+            <p>Only clients can post new projects.</p>
+            <button onClick={() => navigate('/dashboard')} className="mt-4 bg-cyan-500 text-white py-2 px-4 rounded">
+              Go to Dashboard
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -128,25 +132,28 @@ export default function PostProject() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 py-12">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl space-y-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800">Post a New Project</h2>
-        
-        <ProjectDetailsInput form={form} handleChange={handleChange} />
-        <ProjectBudgetInput form={form} handleChange={handleChange} />
-        <ProjectMetadataInput form={form} handleChange={handleChange} />
-        <AttachmentUploader attachments={form.attachments} setAttachments={setAttachments} />
-        
-        {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded">{error.message || error}</div>}
-        
-        <button
-          type="submit"
-          className="bg-cyan-500 text-white font-bold py-3 w-full rounded hover:bg-cyan-600 transition-colors duration-300 disabled:bg-gray-400"
-          disabled={loading}
-        >
-          {loading ? "Posting..." : "Post Project"}
-        </button>
-      </form>
-    </div>
+    <>
+      <LoggedInNavbar />
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 py-12">
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl space-y-6">
+          <h2 className="text-3xl font-bold text-center text-gray-800">Post a New Project</h2>
+          
+          <ProjectDetailsInput form={form} handleChange={handleChange} />
+          <ProjectBudgetInput form={form} handleChange={handleChange} />
+          <ProjectMetadataInput form={form} handleChange={handleChange} />
+          <AttachmentUploader attachments={form.attachments} setAttachments={setAttachments} />
+          
+          {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded">{error.message || error}</div>}
+          
+          <button
+            type="submit"
+            className="bg-cyan-500 text-white font-bold py-3 w-full rounded hover:bg-cyan-600 transition-colors duration-300 disabled:bg-gray-400"
+            disabled={loading}
+          >
+            {loading ? "Posting..." : "Post Project"}
+          </button>
+        </form>
+      </div>
+    </>
   );
 }
