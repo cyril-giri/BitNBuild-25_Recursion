@@ -69,7 +69,7 @@ function App() {
 
           {/* Client only */}
           <Route
-            path="/post-project"
+            path="/projects/new"
             element={
               <PrivateRoute allowedRoles={["client"]}>
                 <PostProject />
