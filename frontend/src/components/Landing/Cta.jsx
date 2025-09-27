@@ -28,7 +28,7 @@ const CTAAndFooter = () => {
     <main className="w-full">
       {/* CTA Section */}
       <Section className="text-center max-w-4xl mx-auto py-16">
-        <h3 className="text-3xl font-semibold text-gray-900 md:text-4xl leading-tight">
+        <h3 className="text-3xl font-semibold text-white md:text-4xl leading-tight">
           Ready to build your campus micro‑economy?
         </h3>
         <p className="mx-auto mt-4 max-w-2xl text-gray-600 text-lg">
