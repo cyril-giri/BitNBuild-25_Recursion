@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
+    "@supabase/supabase-js": "^2.58.0",
     "@tailwindcss/vite": "^4.1.13",
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
@@ -19,6 +20,8 @@
     "motion": "^12.23.22",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.3",
+    "supabase": "^2.45.5",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13"
   },
