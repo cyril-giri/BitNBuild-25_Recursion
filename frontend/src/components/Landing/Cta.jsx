@@ -28,7 +28,7 @@ const CTAAndFooter = () => {
     <main className="w-full">
       {/* CTA Section */}
       <Section className="text-center max-w-4xl mx-auto py-16">
-        <h3 className="text-3xl font-semibold text-gray-900 md:text-4xl leading-tight">
+        <h3 className="text-3xl font-semibold text-blue md:text-4xl leading-tight">
           Ready to build your campus micro‑economy?
         </h3>
         <p className="mx-auto mt-4 max-w-2xl text-gray-600 text-lg">
@@ -45,13 +45,13 @@ const CTAAndFooter = () => {
       </Section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-gray-50">
+      <footer className="border-t border-neutral-800 bg-black">
         <Section className="flex flex-col items-center justify-between gap-4 py-8 md:flex-row max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="h-6 w-6 rounded bg-teal-500" aria-hidden="true" />
-            <span className="font-semibold text-gray-900 text-lg">GigCampus</span>
+            <span className="font-semibold text-white text-lg">GigCampus</span>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-neutral-400">
             © {new Date().getFullYear()} GigCampus. All rights reserved.
           </p>
         </Section>
