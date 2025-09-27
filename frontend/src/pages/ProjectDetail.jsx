@@ -89,6 +89,7 @@ const ProjectDetail = () => {
 
   if (loadingProject) return <div>Loading project...</div>;
   if (errorProject) return <div>Error loading project: {errorProject.message}</div>;
+  if (!project) return <div className="text-neutral-400">Project not found.</div>;
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
