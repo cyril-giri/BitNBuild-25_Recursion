@@ -3,7 +3,10 @@ import { Briefcase, HandCoins, MessageSquare, ShieldCheck } from 'lucide-react';
 
 const HowItWorks = () => {
   const Section = ({ children, id, className = "" }) => (
-    <section id={id} className={`p-8 ${className}`}>
+    <section
+      id={id}
+      className={`w-full max-w-7xl mx-auto p-8 rounded-2xl border border-neutral-800 bg-black ${className}`}
+    >
       {children}
     </section>
   );
@@ -27,20 +30,20 @@ const HowItWorks = () => {
     { 
       icon: ShieldCheck, 
       title: "Approve & Pay", 
-      text: "Release escrow when you're satisfied." 
+      text: "Release escrow when you’re satisfied." 
     }
   ];
 
   return (
-    <Section id="how" className="rounded-2xl border border-gray-200 bg-white">
+    <Section id="how">
       <div className="grid gap-8 md:grid-cols-4">
         {steps.map(({ icon: Icon, title, text }, i) => (
           <div key={i} className="space-y-3 text-center md:text-left">
-            <div className="inline-flex rounded-md bg-teal-50 p-3 text-teal-600">
-              <Icon className="h-6 w-6" />
+            <div className="inline-flex rounded-md bg-neutral-900 p-3 text-cyan-400">
+              <Icon className="h-8 w-8" />
             </div>
-            <div className="text-lg font-semibold text-gray-900">{title}</div>
-            <p className="text-sm text-gray-600 leading-relaxed">{text}</p>
+            <div className="text-lg font-bold text-white">{title}</div>
+            <p className="text-base text-neutral-400 leading-relaxed">{text}</p>
           </div>
         ))}
       </div>

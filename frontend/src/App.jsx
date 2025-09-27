@@ -7,6 +7,7 @@ import PostProject from './pages/PostProject';
 import AdminPanel from './pages/AdminPanel';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
+import ProjectDetailPage from './pages/ProjectDetail';
 
 const PrivateRoute = ({ children, allowedRoles }) => {
   const { user, role } = useAuth();
@@ -45,6 +46,12 @@ function App() {
           <Route
             path="/admin"
             element={<PrivateRoute allowedRoles={['admin']}><AdminPanel /></PrivateRoute>}
+          />
+
+          {/* Project Detail Page (public route) */}
+          <Route
+            path="/project/:id"
+            element={<ProjectDetailPage />}
           />
         </Routes>
       </Router>

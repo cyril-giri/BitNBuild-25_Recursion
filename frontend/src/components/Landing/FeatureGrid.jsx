@@ -60,12 +60,12 @@ function FeatureCard({
         >
           <Icon className="h-6 w-6" />
         </div>
-        <CardTitle className="text-lg font-semibold leading-tight">
+        <CardTitle className="text-lg font-semibold leading-tight text-black">
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-sm leading-relaxed text-black">
           {desc}
         </p>
       </CardContent>
