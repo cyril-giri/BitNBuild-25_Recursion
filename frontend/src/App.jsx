@@ -5,7 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-
+import ProjectDetail from "./pages/ProjectDetail";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import PostProject from "./pages/PostProject";
@@ -69,10 +69,18 @@ function App() {
 
           {/* Client only */}
           <Route
-            path="/post-project"
+            path="/projects/new"
             element={
               <PrivateRoute allowedRoles={["client"]}>
                 <PostProject />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/projects/:id"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer", "admin"]}>
+                <ProjectDetail />
               </PrivateRoute>
             }
           />
