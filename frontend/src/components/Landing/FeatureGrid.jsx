@@ -1,8 +1,46 @@
 import React from 'react';
+<<<<<<< HEAD
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Briefcase, ShieldCheck, MessageSquare, Star } from "lucide-react";
 
+=======
+import { cn } from "@/lib/utils";
+import { Briefcase, ShieldCheck, MessageSquare, Star } from "lucide-react";
+
+export function Card({ children, className, ...props }) {
+  return (
+    <div className={cn("rounded-lg border bg-white shadow-sm", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+export function CardContent({ children, className, ...props }) {
+  return (
+    <div className={cn("p-4", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+export function CardHeader({ children, className, ...props }) {
+  return (
+    <div className={cn("border-b p-4", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+export function CardTitle({ children, className, ...props }) {
+  return (
+    <h3 className={cn("text-lg font-semibold leading-tight", className)} {...props}>
+      {children}
+    </h3>
+  );
+}
+
+>>>>>>> origin/nicole
 function Section({ className, ...props }) {
   return <section className={cn("mx-auto w-full max-w-6xl px-4 py-12 md:py-16", className)} {...props} />
 }
