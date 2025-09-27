@@ -1,17 +1,15 @@
-// src/pages/landing.jsx
 import React from "react";
-import Navbar from "../landing/navbar"; // adjust path if needed
-
-export default function Landing() {
+import HeroSection from "../components/Landing/HeroSection";
+import Navbar from "../components/Landing/navbar";
+import WhoAmI from "../components/Landing/WhoAmI";
+function Landing() {
   return (
-    <>
-      <Navbar />
-      <main className="p-6">
-        <h2 className="text-2xl font-bold">Welcome to GigCampus</h2>
-        <p className="mt-2 text-muted-foreground">
-          This is your landing page content.
-        </p>
-      </main>
-    </>
+    <div className="theme-gigcampus bg-black min-h-screen text-white">
+        <Navbar />
+      <HeroSection />
+      <WhoAmI />
+    </div>
   );
 }
+
+export default Landing;
