@@ -45,13 +45,13 @@ const CTAAndFooter = () => {
       </Section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-gray-50">
+      <footer className="border-t border-neutral-800 bg-black">
         <Section className="flex flex-col items-center justify-between gap-4 py-8 md:flex-row max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="h-6 w-6 rounded bg-teal-500" aria-hidden="true" />
-            <span className="font-semibold text-gray-900 text-lg">GigCampus</span>
+            <span className="font-semibold text-white text-lg">GigCampus</span>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-neutral-400">
             © {new Date().getFullYear()} GigCampus. All rights reserved.
           </p>
         </Section>
