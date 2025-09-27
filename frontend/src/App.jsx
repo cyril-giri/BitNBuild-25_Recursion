@@ -14,19 +14,29 @@ import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 
+// src/App.jsx - PrivateRoute
 const PrivateRoute = ({ children, allowedRoles }) => {
-  const { user, role, loading } = useAuth();
+  // role will now be null ONLY if user is null or if there was an error.
+  const { user, role, loading } = useAuth(); 
 
-  // Show loading spinner while checking auth
+  // The condition is simpler and safer now: WAIT until loading is FALSE.
   if (loading) {
-    return <div>Loading...</div>; // You can replace this with a proper loading component
-  }
-  console.log(user, role);
-  if (!user) return <Navigate to="/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/dashboard" replace />; // Redirect to dashboard instead of register
+    return <div>Loading Profile and Auth...</div>; // Show a clear loading state
   }
 
+  // Auth Check
+  if (!user) {
+    console.log("Redirecting to login: No authenticated user.");
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Role/Authorization Check
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    console.log(`Redirecting to dashboard: Role ${role} not in [${allowedRoles.join(', ')}].`);
+    return <Navigate to="/dashboard" replace />; 
+  }
+
+  // All checks passed
   return children;
 };
 
