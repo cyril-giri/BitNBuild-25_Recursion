@@ -2,12 +2,28 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { useApi } from "../lib/useApi"; 
 
-// Import the new components
+// Import the child components
 import ProjectDetailsInput from "../components/Projects/ProjectDetailsInput";
 import ProjectBudgetInput from "../components/Projects/ProjectBudgetInput";
 import ProjectMetadataInput from "../components/Projects/ProjectMetadataInput";
 import AttachmentUploader from "../components/Projects/AttachmentUploader";
+
+// Helper function to extract the path from the full Supabase URL
+const getPathFromUrl = (url) => {
+  try {
+    const urlObject = new URL(url);
+    // Path is everything after the bucket name in the URL's pathname
+    // e.g., /storage/v1/object/public/project-attachments/file.png -> project-attachments/file.png
+    const pathParts = urlObject.pathname.split('/');
+    // The bucket name is at index 4, so we join everything after it
+    return pathParts.slice(5).join('/');
+  } catch (error) {
+    console.error("Invalid URL:", error);
+    return null;
+  }
+};
 
 export default function PostProject() {
   const { profile, role } = useAuth();
@@ -26,13 +42,36 @@ export default function PostProject() {
     skills_required: "",
     location: "",
     visibility: "public",
-    attachments: [], // Manages the JSONB array
+    attachments: [],
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const {
+    loading,
+    error,
+    refetch: postProject,
+  } = useApi({
+    fetchFn: async () => {
+      const projectData = {
+        client_id: profile.id,
+        title: form.title,
+        short_description: form.short_description,
+        description: form.description,
+        category: form.category,
+        subcategory: form.subcategory,
+        budget_min: Number(form.budget_min),
+        budget_max: Number(form.budget_max),
+        payment_type: form.payment_type,
+        deadline: form.deadline,
+        skills_required: form.skills_required.split(",").map((s) => s.trim()),
+        location: form.location,
+        visibility: form.visibility,
+        attachments: form.attachments,
+      };
+      return await supabase.from("projects").insert([projectData]);
+    },
+    manual: true,
+  });
 
-  // Simple guard for non-clients
   if (role && role !== "client") {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -59,41 +98,32 @@ export default function PostProject() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!profile) {
-      setError("You must be logged in to post a project.");
+      alert("You must be logged in to post a project.");
       return;
     }
-    setLoading(true);
-    setError(null);
+    
+    const result = await postProject();
 
-    try {
-      const projectData = {
-        client_id: profile.id, // Get client_id from the Auth context's profile
-        title: form.title,
-        short_description: form.short_description,
-        description: form.description,
-        category: form.category,
-        subcategory: form.subcategory,
-        budget_min: Number(form.budget_min),
-        budget_max: Number(form.budget_max),
-        payment_type: form.payment_type,
-        deadline: form.deadline,
-        skills_required: form.skills_required.split(",").map((s) => s.trim()),
-        location: form.location,
-        visibility: form.visibility,
-        attachments: form.attachments,
-      };
+    if (result.error) {
+      if (form.attachments.length > 0) {
+        console.log("Database insert failed. Cleaning up uploaded files...");
+        const filePaths = form.attachments.map(file => getPathFromUrl(file.file_url)).filter(Boolean);
 
-      const { error: insertError } = await supabase.from("projects").insert([projectData]);
-      if (insertError) throw insertError;
-      
+        if (filePaths.length > 0) {
+          const { error: removeError } = await supabase.storage
+            .from('project-attachments')
+            .remove(filePaths);
+
+          if (removeError) {
+            console.error("CRITICAL: Failed to delete orphaned files:", removeError.message);
+          } else {
+            console.log("Cleanup successful. Orphaned files deleted.");
+          }
+        }
+      }
+    } else {
       alert("Project posted successfully!");
       navigate("/dashboard");
-
-    } catch (err) {
-      console.error("Submission error:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -107,7 +137,7 @@ export default function PostProject() {
         <ProjectMetadataInput form={form} handleChange={handleChange} />
         <AttachmentUploader attachments={form.attachments} setAttachments={setAttachments} />
         
-        {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded">{error}</div>}
+        {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded">{error.message || error}</div>}
         
         <button
           type="submit"
