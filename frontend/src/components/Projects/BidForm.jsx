@@ -10,7 +10,11 @@ export default function BidForm({ bid, setBid, onSubmit, loading }) {
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg w-full space-y-4 mt-8">
       <h2 className="text-2xl font-bold text-gray-800">Submit Your Bid</h2>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form 
+        onSubmit={onSubmit} 
+        className="space-y-4"
+        style={{ color: 'black' }} // <-- Set form font color to black
+      >
         <div>
           <label htmlFor="bid_amount" className="block text-sm font-medium text-gray-700">Your Bid Amount ($)</label>
           <input
