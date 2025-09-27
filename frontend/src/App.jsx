@@ -13,6 +13,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import ProjectDetail from "./pages/ProjectDetail";
 
 // src/App.jsx - PrivateRoute
 const PrivateRoute = ({ children, allowedRoles }) => {
@@ -48,6 +49,15 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+
+          <Route
+            path="/projects/:id"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer", "admin"]}>
+                <ProjectDetail />
+              </PrivateRoute>
+            }
+          />
 
           {/* Freelancer routes */}
           <Route
