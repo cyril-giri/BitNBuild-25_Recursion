@@ -13,11 +13,17 @@ import AdminPanel from "./pages/AdminPanel";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import ProjectDetail from "./pages/ProjectDetail";
+import ContractWorkspace from "./pages/ContractWorkspace";
+import ContractList from "./pages/ContractList";
+import ProjectList from "./pages/ProjectList";
+import Messages from "./pages/Messages";
+import LeaveReview from "./pages/LeaveReview";
 
 // src/App.jsx - PrivateRoute
 const PrivateRoute = ({ children, allowedRoles }) => {
   // role will now be null ONLY if user is null or if there was an error.
-  const { user, role, loading } = useAuth(); 
+  const { user, role, loading } = useAuth();
 
   // The condition is simpler and safer now: WAIT until loading is FALSE.
   if (loading) {
@@ -29,11 +35,15 @@ const PrivateRoute = ({ children, allowedRoles }) => {
     console.log("Redirecting to login: No authenticated user.");
     return <Navigate to="/login" replace />;
   }
-  
+
   // Role/Authorization Check
   if (allowedRoles && !allowedRoles.includes(role)) {
-    console.log(`Redirecting to dashboard: Role ${role} not in [${allowedRoles.join(', ')}].`);
-    return <Navigate to="/dashboard" replace />; 
+    console.log(
+      `Redirecting to dashboard: Role ${role} not in [${allowedRoles.join(
+        ", "
+      )}].`
+    );
+    return <Navigate to="/dashboard" replace />;
   }
 
   // All checks passed
@@ -49,6 +59,15 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
 
+          <Route
+            path="/contracts/:id/review"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer"]}>
+                <LeaveReview />
+              </PrivateRoute>
+            }
+          />
+
           {/* Freelancer routes */}
           <Route
             path="/dashboard"
@@ -59,7 +78,7 @@ function App() {
             }
           />
           <Route
-            path="/profile"
+            path="/profile/:id?"
             element={
               <PrivateRoute allowedRoles={["freelancer", "client", "admin"]}>
                 <Profile />
@@ -67,12 +86,55 @@ function App() {
             }
           />
 
+          <Route
+            path="/messages"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer", "admin"]}>
+                <Messages />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/projects"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer", "admin"]}>
+                <ProjectList />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/projects/:id"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer", "admin"]}>
+                <ProjectDetail />
+              </PrivateRoute>
+            }
+          />
           {/* Client only */}
           <Route
-            path="/post-project"
+            path="/projects/new"
             element={
               <PrivateRoute allowedRoles={["client"]}>
                 <PostProject />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/contracts"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer"]}>
+                <ContractList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/contracts/:id"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer"]}>
+                <ContractWorkspace />
               </PrivateRoute>
             }
           />
