@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import SubmitDeliverableModal from '../Deliverables/SubmitDeliverableModal'; // <-- Fix import path
+import SubmitWorkModal from '../Dileverables/SubmitWorkModal';
+// --- FIX: Corrected typo in the import path ---
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
-export default function MilestoneCard({ milestone, role, onFund, onSubmit, onApprove }) {
+export default function MilestoneCard({ milestone, isClient, onApproveWork, onRejectWork, onFreelancerCancel, onSubmitDeliverable, onFund }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { title, description, amount, due_date, status } = milestone;
+  const { title, description, amount, due_date, status, escrow } = milestone;
+
+  // Check the escrow status for this milestone. Assumes escrow is an array and we take the first entry.
+  const escrowStatus = escrow && escrow.length > 0 ? escrow[0].status : null;
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -18,36 +22,34 @@ export default function MilestoneCard({ milestone, role, onFund, onSubmit, onApp
     }
   };
 
-  const ActionButton = () => {
-    if (role === 'client') {
-      if (status === 'pending') return <button onClick={onFund} className="bg-cyan-500 text-black text-xs font-bold py-1 px-3 rounded">Fund Milestone</button>;
-      if (status === 'delivered') return <button onClick={onApprove} className="bg-green-500 text-white text-xs font-bold py-1 px-3 rounded">Approve & Release</button>;
+  const ActionButtons = () => {
+    // Client's buttons
+    if (isClient) {
+      if (status === 'pending') {
+        return <button onClick={() => onFund(milestone.id)} className="bg-cyan-500 text-black text-xs font-bold py-1 px-3 rounded">Fund Milestone</button>;
+      }
+      if (status === 'delivered') {
+        return (
+          <div className="flex gap-2">
+            <button onClick={() => onRejectWork(milestone.id)} className="bg-red-800 hover:bg-red-700 text-white text-xs font-bold py-1 px-3 rounded">❌ Reject</button>
+            <button onClick={() => onApproveWork(milestone.id)} className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded">✅ Approve & Release</button>
+          </div>
+        );
+      }
+    } 
+    // Freelancer's buttons
+    else { 
+      if (status === 'funded') {
+        return <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded">Submit Work</button>;
+      }
+      if (status === 'delivered') {
+        return <span className="text-xs text-neutral-400">Awaiting Client Review</span>;
+      }
+      if (escrowStatus === 'funded' && status !== 'delivered') {
+        return <button onClick={() => onFreelancerCancel(milestone.id)} className="bg-neutral-700 hover:bg-neutral-600 text-white text-xs font-bold py-1 px-3 rounded">Cancel Milestone</button>;
+      }
     }
-    if (role === 'freelancer' && status === 'funded') {
-      // Use the same Add Deliverable button/modal as DeliverablesList
-      return (
-        <>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-cyan-400 text-black text-xs font-bold py-1 px-3 rounded hover:bg-cyan-300 transition"
-          >
-            + Add Deliverable
-          </button>
-          {isModalOpen && (
-            <SubmitDeliverableModal
-              open={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              onSubmit={(data) => {
-                // Always attach this milestone's id
-                onSubmit({ ...data, milestone_id: milestone.id });
-              }}
-              loading={false}
-            />
-          )}
-        </>
-      );
-    }
-    return null;
+    return null; // No buttons to show
   };
 
   return (
@@ -63,15 +65,25 @@ export default function MilestoneCard({ milestone, role, onFund, onSubmit, onApp
             {due_date && <p className="text-xs text-neutral-500">Due: {new Date(due_date).toLocaleDateString()}</p>}
           </div>
         </div>
+
         <div className="mt-4 pt-4 border-t border-neutral-800 flex justify-between items-center">
           <div>
             <span className={`text-xs font-semibold uppercase px-2 py-1 border rounded-full ${getStatusClass(status)}`}>
               {status}
             </span>
+            {escrowStatus && <span className="ml-2 text-xs font-semibold uppercase text-cyan-400">({escrowStatus})</span>}
           </div>
-          <ActionButton />
+          <ActionButtons />
         </div>
       </div>
+      
+      {isModalOpen && (
+        <SubmitWorkModal
+          milestone={milestone}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={onSubmitDeliverable}
+        />
+      )}
     </>
   );
 }

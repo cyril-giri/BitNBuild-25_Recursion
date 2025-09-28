@@ -1,21 +1,34 @@
 import React from 'react';
-import MilestoneCard from './MilestoneCard';
 import CreateMilestoneForm from './CreateMilestoneForm';
+import MilestoneCard from './MilestoneCard';
 
-export default function MilestoneList({ milestones, role, isClient, onCreateMilestone, onFundMilestone, onSubmitDeliverable, onApproveWork }) {
+export default function MilestoneList({ 
+  milestones, 
+  role, 
+  isClient, 
+  onCreateMilestone, 
+  onFundMilestone, 
+  onSubmitDeliverable, 
+  onApproveWork,
+  onRejectWork,
+  onFreelancerCancel
+}) {
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Milestones</h2>
       <div className="space-y-4">
         {milestones.length > 0 
           ? milestones.map(milestone => (
-              <MilestoneCard 
+              <MilestoneCard
                 key={milestone.id} 
                 milestone={milestone} 
                 role={role}
-                onFund={() => onFundMilestone(milestone.id)}
-                onSubmit={() => onSubmitDeliverable(milestone)}
-                onApprove={() => onApproveWork(milestone.id)}
+                isClient={isClient}
+                onFund={onFundMilestone}
+                onSubmitDeliverable={onSubmitDeliverable}
+                onApproveWork={onApproveWork}
+                onRejectWork={onRejectWork}
+                onFreelancerCancel={onFreelancerCancel}
               />
             ))
           : <p className="text-neutral-400">No milestones have been created for this contract yet.</p>
