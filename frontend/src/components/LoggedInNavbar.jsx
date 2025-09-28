@@ -23,11 +23,31 @@ const LoggedInNavbar = () => {
     setProfile(null);
 
     // Redirect to login or landing page
-    navigate('/'); // or '/login' for LogoutButton
+    navigate('/');
   };
 
   const handleLogin = () => {
     navigate("/login");
+  };
+
+  const handleDashboard = () => {
+    navigate("/dashboard");
+  };
+
+  const handleContracts = () => {
+    navigate("/contracts");
+  };
+
+  const handleProfile = () => {
+    navigate("/profile");
+  };
+
+  const handleProjects = () => {
+    navigate("/projects");
+  };
+
+  const handleMessages = () => {
+    navigate("/messages");
   };
 
   return (
@@ -35,9 +55,41 @@ const LoggedInNavbar = () => {
       <div className="flex items-center gap-2">
         <span className="font-bold text-xl text-cyan-400">GigCampus</span>
       </div>
+      <div className="flex-1 flex justify-center gap-8">
+        <button
+          onClick={handleDashboard}
+          className="text-white font-semibold text-lg hover:text-cyan-400 transition-colors"
+        >
+          Dashboard
+        </button>
+        <button
+          onClick={handleProjects}
+          className="text-white font-semibold text-lg hover:text-cyan-400 transition-colors"
+        >
+          Projects
+        </button>
+        <button
+          onClick={handleContracts}
+          className="text-white font-semibold text-lg hover:text-cyan-400 transition-colors"
+        >
+          Contracts
+        </button>
+        <button
+          onClick={handleMessages}
+          className="text-white font-semibold text-lg hover:text-cyan-400 transition-colors"
+        >
+          Messages
+        </button>
+        <button
+          onClick={handleProfile}
+          className="text-white font-semibold text-lg hover:text-cyan-400 transition-colors"
+        >
+          Profile
+        </button>
+      </div>
       <div>
         {user ? (
-          <Button onClick={handleLogout} className="ml-4 bg-white" variant="secondary">
+          <Button onClick={handleLogout} className="ml-4 bg-white text-black" variant="secondary">
             Logout
           </Button>
         ) : (
