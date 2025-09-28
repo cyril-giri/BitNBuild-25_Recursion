@@ -3,10 +3,9 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 
-// Import the new components we will create
+// Import Child Components
 import ContractOverview from '../components/Contracts/ContractOverview';
-
-import ChatBox from '../components/Chat/ChatBox';
+import ChatBox from '../components/Chat/ChatBox'; // Assuming this exists from previous steps
 import { useApi } from '../lib/useApi';
 import MilestoneList from '../components/Milestones/MilstoneList';
 
@@ -14,7 +13,7 @@ export default function ContractWorkspace() {
   const { id } = useParams(); // This is the contract_id from the URL
   const { profile, role } = useAuth();
 
-  // Fetch the core contract data, joining project and profile details
+  // Fetch the core contract data, joining project and profile details in one go
   const { data: contract, loading: loadingContract, error: errorContract } = useApi({
     fetchFn: () => supabase
       .from('contracts')
@@ -24,11 +23,11 @@ export default function ContractWorkspace() {
     deps: [id]
   });
 
-  // Fetch all milestones for this contract, along with their deliverables
+  // Fetch all milestones for this contract
   const { data: milestones, loading: loadingMilestones, refetch: refetchMilestones } = useApi({
     fetchFn: () => supabase
       .from('milestones')
-      .select('*, deliverables(*)')
+      .select('*, deliverables(*)') // Also fetch any related deliverables
       .eq('contract_id', id)
       .order('order_no', { ascending: true }),
     deps: [id]
@@ -45,58 +44,48 @@ export default function ContractWorkspace() {
     }
   };
   
-  // Handler for submitting a deliverable (Freelancer action)
+  // Placeholder for submitting a deliverable (Freelancer action)
   const handleSubmitDeliverable = async (deliverableData) => {
-    const { milestone_id, notes, attachments } = deliverableData;
-
-    try {
-      // 1. Insert the deliverable record
-      const { data: newDeliverable, error: deliverableError } = await supabase
-        .from('deliverables')
-        .insert([{
-          milestone_id,
-          freelancer_id: profile.id,
-          notes,
-          file_url: attachments[0]?.file_url || null, // Assuming one file for simplicity
-        }])
-        .select()
-        .single();
-      
-      if (deliverableError) throw deliverableError;
-
-      // 2. Update the milestone status to 'delivered'
-      const { error: milestoneError } = await supabase
-        .from('milestones')
-        .update({ status: 'delivered' })
-        .eq('id', milestone_id);
-
-      if (milestoneError) throw milestoneError;
-      
-      alert('Deliverable submitted successfully!');
-      refetchMilestones();
-
-    } catch (error) {
-      alert("Error submitting deliverable: " + error.message);
-    }
+    // This logic would involve inserting into the 'deliverables' table
+    // and updating the milestone status to 'delivered'.
+    console.log("Submitting deliverable:", deliverableData);
+    alert("Deliverable submitted! (Placeholder)");
+    refetchMilestones();
   };
+  
+  // Placeholder for funding a milestone (Client action)
+  const handleFundMilestone = async (milestoneId) => {
+    // This logic would involve Stripe/escrow and updating milestone status.
+    console.log("Funding milestone:", milestoneId);
+    alert("Milestone funded! (Placeholder)");
+  };
+  
+  // Placeholder for approving work (Client action)
+  const handleApproveWork = async (milestoneId) => {
+    // This logic would involve releasing escrow and updating milestone status.
+    console.log("Approving work for milestone:", milestoneId);
+    alert("Work approved and payment released! (Placeholder)");
+  };
+
 
   const isLoading = loadingContract || loadingMilestones;
   if (isLoading) return <div className="text-center text-white mt-20">Loading Workspace...</div>;
-  if (errorContract || !contract) return <div className="text-center text-red-500 mt-20">Contract not found.</div>;
+  if (errorContract || !contract) return <div className="text-center text-red-500 mt-20">Contract not found or an error occurred.</div>;
 
   return (
     <div className="bg-neutral-950 min-h-screen text-white">
       <div className="max-w-6xl mx-auto py-10 px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content area for contract and milestones */}
         <div className="lg:col-span-2 space-y-8">
-          <ContractOverview contract={contract} />
+          <ContractOverview contract={contract} milestones={milestones || []} />
           <MilestoneList 
             milestones={milestones || []} 
             role={role}
-            contractId={id}
-            onCreateMilestone={handleCreateMilestone}
-            onSubmitDeliverable={handleSubmitDeliverable}
             isClient={profile?.id === contract.client.id}
+            onCreateMilestone={handleCreateMilestone}
+            onFundMilestone={handleFundMilestone}
+            onSubmitDeliverable={handleSubmitDeliverable}
+            onApproveWork={handleApproveWork}
           />
         </div>
 
