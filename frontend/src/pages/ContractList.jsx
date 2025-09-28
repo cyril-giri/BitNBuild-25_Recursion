@@ -6,6 +6,7 @@ import ContractCard from '../components/Contracts/ContractCard';
 import LoggedInNavbar from '../components/LoggedInNavbar'; // Assuming you have a logged-in navbar
 import { useApi } from '../lib/useApi';
 
+
 export default function ContractList() {
   const { profile } = useAuth();
   
