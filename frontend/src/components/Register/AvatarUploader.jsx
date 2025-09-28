@@ -8,7 +8,7 @@ export default function AvatarUploader({ setAvatarUrl }) {
 
   return (
     <div className="w-64 mb-4">
-      <label htmlFor="avatar-upload" className="block text-sm font-medium mb-1">Profile Picture</label>
+      <label htmlFor="avatar-upload" className="block text-sm font-medium mb-1 text-white">Profile Picture</label>
       <input id="avatar-upload" type="file" accept="image/*" onChange={handleFileChange} className="border p-2 w-full text-sm" />
     </div>
   );

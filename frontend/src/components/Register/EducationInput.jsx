@@ -22,9 +22,9 @@ export default function EducationInput({ education, setEducation }) {
 
   return (
     <div className="w-64 mb-4 border p-2 rounded">
-      <h3 className="font-semibold mb-2">Education</h3>
+      <h3 className="font-semibold mb-2 text-white">Education</h3>
       {education.map((item, index) => (
-        <div key={index} className="space-y-1 mb-2 p-1 border-b">
+        <div key={index} className="space-y-1 mb-2 p-1 border-b last:border-0">
           <input
             type="text"
             placeholder="Degree/Major"
