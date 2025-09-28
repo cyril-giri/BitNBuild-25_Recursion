@@ -61,6 +61,16 @@ export default function Login() {
       <button type="submit" disabled={loading} className="bg-blue-500 text-white p-2 rounded">
         {loading ? 'Logging in...' : 'Login'}
       </button>
+      <div className="mt-2 text-sm text-center text-neutral-600">
+        Not a member?{" "}
+        <button
+          type="button"
+          className="text-blue-600 underline hover:text-blue-800"
+          onClick={() => navigate("/register")}
+        >
+          Register
+        </button>
+      </div>
       {error && <div className="text-red-500">{error}</div>}
     </form>
   );
