@@ -18,6 +18,7 @@ import ContractWorkspace from "./pages/ContractWorkspace";
 import ContractList from "./pages/ContractList";
 import ProjectList from "./pages/ProjectList";
 import Messages from "./pages/Messages";
+import LeaveReview from "./pages/LeaveReview";
 
 // src/App.jsx - PrivateRoute
 const PrivateRoute = ({ children, allowedRoles }) => {
@@ -57,6 +58,15 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+
+          <Route
+            path="/contracts/:id/review"
+            element={
+              <PrivateRoute allowedRoles={["client", "freelancer"]}>
+                <LeaveReview />
+              </PrivateRoute>
+            }
+          />
 
           {/* Freelancer routes */}
           <Route
