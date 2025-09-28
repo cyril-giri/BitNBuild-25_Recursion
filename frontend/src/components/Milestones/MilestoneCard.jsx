@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SubmitDeliverableModal from '../Dileverables/SubmitDileverableModel';
+import SubmitDeliverableModal from '../Deliverables/SubmitDeliverableModal'; // <-- Fix import path
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -24,7 +24,28 @@ export default function MilestoneCard({ milestone, role, onFund, onSubmit, onApp
       if (status === 'delivered') return <button onClick={onApprove} className="bg-green-500 text-white text-xs font-bold py-1 px-3 rounded">Approve & Release</button>;
     }
     if (role === 'freelancer' && status === 'funded') {
-      return <button onClick={() => setIsModalOpen(true)} className="bg-green-500 text-white text-xs font-bold py-1 px-3 rounded">Submit Work</button>;
+      // Use the same Add Deliverable button/modal as DeliverablesList
+      return (
+        <>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-cyan-400 text-black text-xs font-bold py-1 px-3 rounded hover:bg-cyan-300 transition"
+          >
+            + Add Deliverable
+          </button>
+          {isModalOpen && (
+            <SubmitDeliverableModal
+              open={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onSubmit={(data) => {
+                // Always attach this milestone's id
+                onSubmit({ ...data, milestone_id: milestone.id });
+              }}
+              loading={false}
+            />
+          )}
+        </>
+      );
     }
     return null;
   };
@@ -51,13 +72,6 @@ export default function MilestoneCard({ milestone, role, onFund, onSubmit, onApp
           <ActionButton />
         </div>
       </div>
-      {isModalOpen && (
-        <SubmitDeliverableModal
-          milestone={milestone}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={onSubmit}
-        />
-      )}
     </>
   );
 }

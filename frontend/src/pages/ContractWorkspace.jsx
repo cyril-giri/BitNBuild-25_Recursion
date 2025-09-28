@@ -8,6 +8,7 @@ import ContractOverview from '../components/Contracts/ContractOverview';
 import ChatBox from '../components/Chat/ChatBox'; // Assuming this exists from previous steps
 import { useApi } from '../lib/useApi';
 import MilestoneList from '../components/Milestones/MilstoneList';
+import DeliverablesList from '../components/Deliverables/DeliverablesList';
 
 export default function ContractWorkspace() {
   const { id } = useParams(); // This is the contract_id from the URL
@@ -33,6 +34,17 @@ export default function ContractWorkspace() {
     deps: [id]
   });
 
+  // Fetch all deliverables for this contract (flat list)
+  const { data: deliverables, loading: loadingDeliverables, refetch: refetchDeliverables } = useApi({
+    fetchFn: () => supabase
+      .from('deliverables')
+      .select('*')
+      .in('milestone_id', (milestones || []).map(m => m.id))
+      .order('created_at', { ascending: true }),
+    deps: [milestones?.map(m => m.id).join(",")], // refetch when milestones change
+    manual: !milestones || milestones.length === 0, // only run when milestones are loaded
+  });
+
   // Handler for creating a new milestone (Client action)
   const handleCreateMilestone = async (milestoneData) => {
     const { error } = await supabase.from('milestones').insert([{ contract_id: id, ...milestoneData }]);
@@ -44,20 +56,81 @@ export default function ContractWorkspace() {
     }
   };
   
-  // Placeholder for submitting a deliverable (Freelancer action)
+  // Submit a new deliverable (Freelancer)
   const handleSubmitDeliverable = async (deliverableData) => {
-    // This logic would involve inserting into the 'deliverables' table
-    // and updating the milestone status to 'delivered'.
-    console.log("Submitting deliverable:", deliverableData);
-    alert("Deliverable submitted! (Placeholder)");
-    refetchMilestones();
+    // Find the first funded milestone for this contract
+    const fundedMilestone = (milestones || []).find(m => m.status === "funded");
+    if (!fundedMilestone) {
+      alert("No funded milestone available to submit deliverable.");
+      return;
+    }
+    const { error } = await supabase.from('deliverables').insert([{
+      ...deliverableData,
+      milestone_id: fundedMilestone.id,
+      freelancer_id: profile.id,
+    }]);
+    if (error) {
+      alert("Error submitting deliverable: " + error.message);
+    } else {
+      refetchDeliverables();
+      refetchMilestones();
+    }
   };
   
+  // Accept a deliverable (Client)
+  const handleAcceptDeliverable = async (deliverable) => {
+    // 1. Update deliverable status
+    const { error: deliverableError } = await supabase
+      .from('deliverables')
+      .update({ status: "accepted" })
+      .eq('id', deliverable.id);
+    // 2. Update milestone status
+    const { error: milestoneError } = await supabase
+      .from('milestones')
+      .update({ status: "accepted" })
+      .eq('id', deliverable.milestone_id);
+
+    if (deliverableError || milestoneError) {
+      alert("Error accepting deliverable.");
+    } else {
+      refetchDeliverables();
+      refetchMilestones();
+    }
+  };
+
+  // Request revision (Client)
+  const handleRequestRevision = async (deliverable) => {
+    const { error } = await supabase
+      .from('deliverables')
+      .update({ status: "revision_requested" })
+      .eq('id', deliverable.id);
+    if (error) {
+      alert("Error requesting revision: " + error.message);
+    } else {
+      refetchDeliverables();
+    }
+  };
+
+  // Resubmit deliverable (Freelancer)
+  const handleResubmitDeliverable = (deliverable) => {
+    // Open the submit modal, optionally pre-fill notes, etc.
+    // You can enhance this as needed.
+    alert("Please use the Add Deliverable button to resubmit your work.");
+  };
+
   // Placeholder for funding a milestone (Client action)
   const handleFundMilestone = async (milestoneId) => {
-    // This logic would involve Stripe/escrow and updating milestone status.
-    console.log("Funding milestone:", milestoneId);
-    alert("Milestone funded! (Placeholder)");
+    const { error } = await supabase
+      .from('milestones')
+      .update({ status: "funded" })
+      .eq('id', milestoneId);
+
+    if (error) {
+      alert("Error funding milestone: " + error.message);
+    } else {
+      alert("Milestone funded!");
+      refetchMilestones();
+    }
   };
   
   // Placeholder for approving work (Client action)
@@ -68,7 +141,7 @@ export default function ContractWorkspace() {
   };
 
 
-  const isLoading = loadingContract || loadingMilestones;
+  const isLoading = loadingContract || loadingMilestones || loadingDeliverables;
   if (isLoading) return <div className="text-center text-white mt-20">Loading Workspace...</div>;
   if (errorContract || !contract) return <div className="text-center text-red-500 mt-20">Contract not found or an error occurred.</div>;
 
@@ -86,6 +159,16 @@ export default function ContractWorkspace() {
             onFundMilestone={handleFundMilestone}
             onSubmitDeliverable={handleSubmitDeliverable}
             onApproveWork={handleApproveWork}
+          />
+          <DeliverablesList
+            deliverables={deliverables || []}
+            role={role}
+            onAccept={handleAcceptDeliverable}
+            onRequestRevision={handleRequestRevision}
+            onResubmit={handleResubmitDeliverable}
+            onSubmitDeliverable={handleSubmitDeliverable}
+            loading={loadingDeliverables}
+            milestones={milestones || []}
           />
         </div>
 
