@@ -68,7 +68,7 @@ function App() {
             }
           />
           <Route
-            path="/profile"
+            path="/profile/:id?"
             element={
               <PrivateRoute allowedRoles={["freelancer", "client", "admin"]}>
                 <Profile />
