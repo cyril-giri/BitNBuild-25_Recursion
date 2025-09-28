@@ -1,4 +1,5 @@
 import React from "react"
+import { useNavigate } from "react-router-dom"
 import { Briefcase, Sparkles } from "lucide-react"
 
 // Utility function for className concatenation
@@ -164,6 +165,8 @@ function MarketplaceDemo() {
 
 // Main HeroSection component
 function HeroSection() {
+  const navigate = useNavigate();
+
   return (
     <Section id="top" className="pt-16">
       <div className="grid items-center gap-8 md:grid-cols-2">
@@ -179,8 +182,17 @@ function HeroSection() {
             escrow, chat & share files, and build a portfolio that opens doors.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button className="h-11 px-6 text-base font-semibold">Hire Talent</Button>
-            <Button variant="secondary" className="h-11 px-6 text-base font-semibold">
+            <Button
+              className="h-11 px-6 text-base font-semibold"
+              onClick={() => navigate("/login")}
+            >
+              Hire Talent
+            </Button>
+            <Button
+              variant="secondary"
+              className="h-11 px-6 text-base font-semibold"
+              onClick={() => navigate("/login")}
+            >
               Find Gigs
             </Button>
           </div>

@@ -1,27 +1,7 @@
 import React from 'react';
+import DeliverableCard from './DeliverableCard'; // Assuming you create this separate component
 
-const DeliverableCard = ({ deliverable }) => (
-  <div className="border border-neutral-800 bg-neutral-900 p-4 rounded-lg">
-    <a 
-      href={deliverable.file_url} 
-      target="_blank" 
-      rel="noopener noreferrer"
-      className="font-semibold text-cyan-400 hover:underline"
-    >
-      {deliverable.notes || 'Download Deliverable'}
-    </a>
-    <p className="text-xs text-neutral-400 mt-1">
-      Submitted on: {new Date(deliverable.created_at).toLocaleDateString()}
-    </p>
-    <div className="mt-2 text-xs font-semibold uppercase px-2 py-1 border rounded-full inline-block
-      ${deliverable.status === 'accepted' ? 'text-green-400 border-green-400/50' : 'text-yellow-400 border-yellow-400/50'}">
-      {deliverable.status}
-    </div>
-  </div>
-);
-
-export default function DeliverablesTab({ milestones }) {
-  // Filter milestones to only include those that have deliverables
+export default function DeliverablesTab({ milestones, isClient, onAccept, onRequestRevision }) {
   const milestonesWithDeliverables = milestones?.filter(m => m.deliverables && m.deliverables.length > 0) || [];
 
   if (milestonesWithDeliverables.length === 0) {
@@ -37,7 +17,13 @@ export default function DeliverablesTab({ milestones }) {
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
             {milestone.deliverables.map(deliverable => (
-              <DeliverableCard key={deliverable.id} deliverable={deliverable} />
+              <DeliverableCard 
+                key={deliverable.id} 
+                deliverable={deliverable}
+                isClient={isClient}
+                onAccept={onAccept}
+                onRequestRevision={onRequestRevision}
+              />
             ))}
           </div>
         </div>
