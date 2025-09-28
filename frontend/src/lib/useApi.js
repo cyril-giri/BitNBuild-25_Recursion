@@ -1,15 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-
-/**
- * useApi - Custom hook for fetching data from any API (axios or custom fetch).
- * @param {Object} options
- * - fetchFn: async function (custom fetch logic, e.g. Supabase)
- * - manual: boolean (If true, prevents fetch on mount/deps change; requires explicit refetch call) <-- NEW
- * // ... other params ...
- * @returns {Object} { data, error, loading, status, isSuccess, isError, refetch }
- */
 export function useApi(options) {
   const {
     url,
@@ -19,86 +10,68 @@ export function useApi(options) {
     data: body,
     headers,
     deps = [],
-    manual = false, // <-- NEW: Default is false (auto-run)
+    manual = false,
   } = options || {};
 
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null);
-  
-  // State to hold the most recent result when called manually, useful for submission handlers
+  const [loading, setLoading] = useState(!manual);
   const [lastResult, setLastResult] = useState({ data: null, error: null });
 
-  const fetchData = useCallback(async () => {
+  // --- FIX: Re-added '...args' to accept and pass arguments ---
+  const fetchData = useCallback(async (...args) => {
     setLoading(true);
     setError(null);
-    setStatus(null);
     
     let result = { data: null, error: null };
     
     try {
       let response;
       if (fetchFn) {
-        // Handle Supabase/custom fetchFn
-        response = await fetchFn();
-        // Supabase returns { data, error } directly on the result object
-        result.data = response?.data || response;
+        // Pass any arguments from 'refetch' to your custom fetch function
+        response = await fetchFn(...args);
+        
+        // This handles both Supabase { data, error } objects and direct data returns
+        result.data = response?.data === undefined ? response : response.data;
         result.error = response?.error || null;
+
       } else if (url) {
-        // Handle Axios request
         const res = await axios({ url, method, params, data: body, headers });
-        response = res.data;
-        setStatus(res.status);
         result.data = res.data;
       } else {
         throw new Error('No fetchFn or url provided');
       }
+      
+      if (result.error) throw result.error;
 
       setData(result.data);
-      setError(result.error);
-      
-      // Update local result state
-      setLastResult({ data: result.data, error: result.error });
-
-      // Note: If you want to use the return value of refetch, return the final data/error object.
-      return { data: result.data, error: result.error }; 
+      setLastResult({ data: result.data, error: null });
+      return { data: result.data, error: null }; 
       
     } catch (err) {
       const finalError = err?.response?.data?.message || err.message || err;
-      
       setError(finalError);
       setData(null);
-      setStatus(err?.response?.status || null);
-      
-      // Update local result state
       setLastResult({ data: null, error: finalError });
-
-      // If manual is true, we throw/return the error so the caller can handle it immediately
       return { data: null, error: finalError };
-
     } finally {
       setLoading(false);
     }
-  }, [url, method, fetchFn, params, body, headers, ...deps]); // Note: Spread 'deps' *outside* of dependency array to prevent infinite loop
+  }, deps); // The hook should only depend on 'deps' to avoid unnecessary re-renders
 
   useEffect(() => {
-    // Only fetch on mount/deps change if manual is FALSE
     if (!manual) {
       fetchData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [fetchData, manual]);
 
   return {
     data,
     error,
     loading,
-    status,
     isSuccess: !loading && !error && data !== null,
     isError: !loading && !!error,
     refetch: fetchData,
-    // Provide the last result as well, which is helpful for sequential logic checks
     lastResult, 
   };
 }
