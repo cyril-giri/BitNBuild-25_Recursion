@@ -1,6 +1,5 @@
 import React from 'react';
 
-// A small component for displaying user pills
 const ProfilePill = ({ user, role }) => (
   <div className="flex items-center gap-3">
     <img 
@@ -16,14 +15,19 @@ const ProfilePill = ({ user, role }) => (
 );
 
 export default function ContractOverview({ contract, milestones }) {
-  const { project, client, freelancer, status, start_date } = contract;
+  const { project, client, freelancer } = contract;
 
-  // Calculate financial progress
+  // --- UPDATED LOGIC FOR FINANCIAL PROGRESS ---
+  // The total value of the contract is the sum of all defined milestone amounts.
   const totalAmount = milestones.reduce((sum, m) => sum + m.amount, 0);
-  const fundedAmount = milestones
-    .filter(m => m.status === 'accepted' || m.status === 'delivered' || m.status === 'funded')
+
+  // The paid amount is ONLY the sum of milestones with the 'accepted' status.
+  const paidAmount = milestones
+    .filter(m => m.status === 'accepted')
     .reduce((sum, m) => sum + m.amount, 0);
-  const progressPercent = totalAmount > 0 ? (fundedAmount / totalAmount) * 100 : 0;
+    
+  const progressPercent = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
+  // --- END OF UPDATE ---
 
   const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -39,12 +43,12 @@ export default function ContractOverview({ contract, milestones }) {
 
       <div className="mt-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-semibold text-white">Financial Progress</span>
-          <span className="text-sm text-neutral-400">{formatCurrency(fundedAmount)} / {formatCurrency(totalAmount)}</span>
+          <span className="text-sm font-semibold text-white">Payment Released</span>
+          <span className="text-sm text-neutral-400">{formatCurrency(paidAmount)} / {formatCurrency(totalAmount)}</span>
         </div>
         <div className="w-full bg-neutral-800 rounded-full h-2.5">
           <div 
-            className="bg-cyan-500 h-2.5 rounded-full transition-all duration-500" 
+            className="bg-green-500 h-2.5 rounded-full transition-all duration-500" // Changed to green for "paid"
             style={{ width: `${progressPercent}%` }}
           ></div>
         </div>
