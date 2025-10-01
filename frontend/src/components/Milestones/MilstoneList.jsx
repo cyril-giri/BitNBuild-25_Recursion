@@ -11,7 +11,8 @@ export default function MilestoneList({
   onSubmitDeliverable, 
   onApproveWork,
   onRejectWork,
-  onFreelancerCancel
+  onFreelancerCancel,
+  onRefundIfDeadlineMissed
 }) {
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-6">
@@ -29,6 +30,7 @@ export default function MilestoneList({
                 onApproveWork={onApproveWork}
                 onRejectWork={onRejectWork}
                 onFreelancerCancel={onFreelancerCancel}
+                onRefundIfDeadlineMissed={onRefundIfDeadlineMissed}
               />
             ))
           : <p className="text-neutral-400">No milestones have been created for this contract yet.</p>

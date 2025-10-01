@@ -8,13 +8,20 @@ import LeaveReviewPrompt from "../components/Reviews/LeaveReviewPrompt";
 import { useApi } from "../lib/useApi";
 import MilestoneList from "../components/Milestones/MilstoneList";
 import Tabs from "../components/Dashboard/Shared/Tabs";
-// <-- FIX: Corrected typo from "MilstoneList"
+import ConnectWalletButton from "../components/ui/ConnectWalletButton";
+import { ethers } from "ethers";
+import { deployEscrowContract } from "../lib/deployEscrowContract";
+import EscrowMilestoneUSDC from "../lib/EscrowMilestoneUSDC.json";
+import { usdcToSmallestUnit, dateToEndOfDayUnix } from "../lib/utils";
 
+const USDC_ADDRESS = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
 
 export default function ContractWorkspace() {
   const { id: contractId } = useParams();
   const { profile, role } = useAuth();
   const [activeTab, setActiveTab] = useState("Milestones");
+  const [deploying, setDeploying] = useState(false);
+  const [setupStatus, setSetupStatus] = useState("");
 
   const { data, loading, error, refetch } = useApi({
     fetchFn: async () => {
@@ -45,24 +52,98 @@ export default function ContractWorkspace() {
 
   const { contract, milestones, reviews } = data || {};
 
-  const handleCreateMilestone = async (milestoneData) => {
-    const { error } = await supabase.from('milestones').insert([{ contract_id: contractId, ...milestoneData }]);
-    if (error) {
-      alert("Error creating milestone: " + error.message);
-    } else {
-      alert("Milestone created successfully!");
+  const handleCreateMilestone = async ({ title, description, amount, due_date }) => {
+    if (!contract?.escrow_contract_address) {
+      alert("Escrow contract not deployed yet.");
+      return;
+    }
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contractInstance = new ethers.Contract(
+        contract.escrow_contract_address,
+        EscrowMilestoneUSDC.abi,
+        signer
+      );
+
+      // Convert amount and deadline
+      const amountSmallest = usdcToSmallestUnit(amount);
+      const deadlineUnix = dateToEndOfDayUnix(due_date);
+      const deadlineIso = new Date(deadlineUnix * 1000).toISOString();
+
+      // 1. Call on-chain createMilestone
+      const tx = await contractInstance.createMilestone(amountSmallest, deadlineUnix);
+      await tx.wait();
+
+      // 2. Get the new milestone index from the contract
+      const milestoneCount = await contractInstance.milestoneCount();
+      const order_no = Number(milestoneCount) - 1; // index of the newly created milestone
+
+      // 3. Insert milestone in Supabase with order_no
+      const { error } = await supabase.from("milestones").insert([{
+        contract_id: contractId,
+        title,
+        description,
+        amount: amountSmallest,
+        due_date: deadlineIso,
+        status: "pending",
+        order_no // <-- store the on-chain index
+      }]);
+      if (error) throw error;
+
+      alert("Milestone created!");
       refetch();
+    } catch (err) {
+      alert("Error creating milestone: " + (err.message || err));
     }
   };
 
-  const handleFundMilestone = async (milestoneId) => {
-    if (window.confirm("Are you sure you want to fund this milestone?")) {
-      const { error } = await supabase.rpc('fund_milestone', { p_milestone_id: milestoneId });
-      if (error) alert("Error funding milestone: " + error.message);
-      else {
-        alert("Milestone funded successfully!");
-        refetch();
-      }
+  const handleFundMilestone = async (milestone) => {
+    if (!contract?.escrow_contract_address) {
+      alert("Escrow contract not deployed yet.");
+      return;
+    }
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // 1. Approve USDC for the contract if needed
+      const usdc = new ethers.Contract(
+        USDC_ADDRESS,
+        ["function approve(address spender, uint256 amount) public returns (bool)"],
+        signer
+      );
+      const approveTx = await usdc.approve(contract.escrow_contract_address, milestone.amount);
+      await approveTx.wait();
+
+      // 2. Fund milestone on-chain
+      const contractInstance = new ethers.Contract(
+        contract.escrow_contract_address,
+        EscrowMilestoneUSDC.abi,
+        signer
+      );
+      const tx = await contractInstance.fundMilestone(milestone.order_no); // or milestone index/id
+      await tx.wait();
+
+      // 3. Update milestone status in Supabase
+      await supabase.from("milestones").update({ status: "funded" }).eq("id", milestone.id);
+
+      // 4. Optionally, update escrow table
+      await supabase.from("escrow").upsert([{
+        milestone_id: milestone.id,
+        //contract_id: contractId,
+        status: "funded",
+        tx_hash: tx.hash
+      }], { onConflict: ["milestone_id"] });
+
+      alert("Milestone funded!");
+      refetch();
+    } catch (err) {
+      alert("Error funding milestone: " + (err.message || err));
     }
   };
   
@@ -84,24 +165,89 @@ export default function ContractWorkspace() {
   };
 
   const handleApproveWork = async (milestoneId) => {
-    if (window.confirm("Approve this deliverable? This will release payment.")) {
-      const { error } = await supabase.rpc('client_approve_milestone', { p_milestone_id: milestoneId });
-      if (error) alert("Error: " + error.message);
-      else {
-        alert("Work approved and payment released!");
-        refetch();
-      }
+    if (!contract?.escrow_contract_address) {
+      alert("Escrow contract not deployed yet.");
+      return;
+    }
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Find the milestone object (to get order_no)
+      const milestone = milestones.find(m => m.id === milestoneId);
+      if (!milestone) throw new Error("Milestone not found");
+
+      // 1. Accept milestone on-chain
+      const contractInstance = new ethers.Contract(
+        contract.escrow_contract_address,
+        EscrowMilestoneUSDC.abi,
+        signer
+      );
+      const tx = await contractInstance.acceptMilestone(milestone.order_no);
+      await tx.wait();
+
+      // 2. Update milestone status in Supabase
+      await supabase.from("milestones").update({ status: "accepted" }).eq("id", milestone.id);
+
+      // 3. Optionally, update escrow table
+      await supabase.from("escrow").upsert([{
+        milestone_id: milestone.id,
+        //contract_id: contractId,
+        status: "released",
+        tx_hash: tx.hash
+      }], { onConflict: ["milestone_id"] });
+
+      alert("Work approved and payment released!");
+      refetch();
+    } catch (err) {
+      alert("Error approving milestone: " + (err.message || err));
     }
   };
 
   const handleRejectWork = async (milestoneId) => {
-    if (window.confirm("Reject this deliverable? This will request a revision.")) {
-      const { error } = await supabase.rpc('client_reject_milestone', { p_milestone_id: milestoneId });
-      if (error) alert("Error: " + error.message);
-      else {
-        alert("Revision requested.");
-        refetch();
-      }
+    if (!contract?.escrow_contract_address) {
+      alert("Escrow contract not deployed yet.");
+      return;
+    }
+    if (!window.confirm("Are you sure you want to reject this milestone? Funds will be refunded to you.")) {
+      return;
+    }
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Find the milestone object (to get order_no)
+      const milestone = milestones.find(m => m.id === milestoneId);
+      if (!milestone) throw new Error("Milestone not found");
+
+      // 1. Reject milestone on-chain
+      const contractInstance = new ethers.Contract(
+        contract.escrow_contract_address,
+        EscrowMilestoneUSDC.abi,
+        signer
+      );
+      const tx = await contractInstance.rejectMilestone(milestone.order_no);
+      await tx.wait();
+
+      // 2. Update milestone status in Supabase
+      await supabase.from("milestones").update({ status: "rejected" }).eq("id", milestone.id);
+
+      // 3. Optionally, update escrow table
+      await supabase.from("escrow").upsert([{
+        milestone_id: milestone.id,
+        //contract_id: contractId,
+        status: "refunded",
+        tx_hash: tx.hash
+      }], { onConflict: ["milestone_id"] });
+
+      alert("Milestone rejected and funds refunded!");
+      refetch();
+    } catch (err) {
+      alert("Error rejecting milestone: " + (err.message || err));
     }
   };
   
@@ -127,6 +273,109 @@ export default function ContractWorkspace() {
     }
   };
 
+  // Deploy contract and set client, USDC
+  const handleDeployAndSetupEscrow = async () => {
+    setDeploying(true);
+    setSetupStatus("Deploying contract...");
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // 1. Deploy contract
+      const contractAddress = await deployEscrowContract(signer);
+      setSetupStatus("Contract deployed. Setting client...");
+
+      // 2. Set client
+      const contractInstance = new ethers.Contract(contractAddress, EscrowMilestoneUSDC.abi, signer);
+      await contractInstance.setClient(signer.address);
+      setSetupStatus("Client set. Setting USDC address...");
+
+      // 3. Set USDC address
+      await contractInstance.setUSDC(USDC_ADDRESS);
+      setSetupStatus("USDC address set. Waiting for freelancer to set their address...");
+
+      // 4. Store contract address in Supabase
+      const { error } = await supabase
+        .from("contracts")
+        .update({ escrow_contract_address: contractAddress })
+        .eq("id", contractId);
+      if (error) throw error;
+
+      setSetupStatus("Escrow contract setup complete! Ask the freelancer to connect and set their address.");
+      refetch();
+    } catch (err) {
+      setSetupStatus("Error: " + (err.message || err));
+    }
+    setDeploying(false);
+  };
+
+  // Freelancer sets their address
+  const handleSetFreelancer = async () => {
+    setSetupStatus("Setting freelancer...");
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      if (!contract?.escrow_contract_address) throw new Error("Contract not deployed yet");
+      const contractInstance = new ethers.Contract(
+        contract.escrow_contract_address,
+        EscrowMilestoneUSDC.abi,
+        signer
+      );
+      await contractInstance.setFreelancer(signer.address);
+      setSetupStatus("Freelancer set!");
+      refetch();
+    } catch (err) {
+      setSetupStatus("Error: " + (err.message || err));
+    }
+  };
+
+  const handleRefundIfDeadlineMissed = async (milestoneId) => {
+    if (!contract?.escrow_contract_address) {
+      alert("Escrow contract not deployed yet.");
+      return;
+    }
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Find the milestone object (to get order_no)
+      const milestone = milestones.find(m => m.id === milestoneId);
+      if (!milestone) throw new Error("Milestone not found");
+
+      // 1. Refund if deadline missed on-chain
+      const contractInstance = new ethers.Contract(
+        contract.escrow_contract_address,
+        EscrowMilestoneUSDC.abi,
+        signer
+      );
+      const tx = await contractInstance.refundIfDeadlineMissed(milestone.order_no);
+      await tx.wait();
+
+      // 2. Update milestone status in Supabase
+      await supabase.from("milestones").update({ status: "refunded" }).eq("id", milestone.id);
+
+      // 3. Optionally, update escrow table
+      await supabase.from("escrow").upsert([{
+        milestone_id: milestone.id,
+        //contract_id: contractId,
+        status: "refunded",
+        tx_hash: tx.hash
+      }], { onConflict: ["milestone_id"] });
+
+      alert("Deadline missed. Funds refunded to client!");
+      refetch();
+    } catch (err) {
+      alert("Error refunding milestone: " + (err.message || err));
+    }
+  };
+
   if (loading || !profile) return <div className="text-center text-white mt-20">Loading Workspace...</div>;
   if (error || !contract) return <div className="text-center text-red-500 mt-20">Error loading contract data.</div>;
 
@@ -136,6 +385,35 @@ export default function ContractWorkspace() {
   return (
     <div className="bg-neutral-950 min-h-screen text-white">
       <div className="max-w-4xl mx-auto py-10 px-4 space-y-8">
+        <ConnectWalletButton />
+
+        {/* Escrow contract deployment/setup UI */}
+        {isClient && !contract?.escrow_contract_address && (
+          <div className="mb-6">
+            <button
+              onClick={handleDeployAndSetupEscrow}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg"
+              disabled={deploying}
+            >
+              {deploying ? "Deploying..." : "Deploy Escrow Contract"}
+            </button>
+            {setupStatus && <div className="mt-2 text-cyan-300">{setupStatus}</div>}
+          </div>
+        )}
+
+        {/* Freelancer sets their address after contract is deployed */}
+        {!isClient && contract?.escrow_contract_address && (
+          <div className="mb-6">
+            <button
+              onClick={handleSetFreelancer}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg"
+            >
+              Set Freelancer Address
+            </button>
+            {setupStatus && <div className="mt-2 text-cyan-300">{setupStatus}</div>}
+          </div>
+        )}
+
         {contract.status === "completed" && (
           <LeaveReviewPrompt contractId={contract.id} hasUserReviewed={hasUserReviewed} />
         )}
@@ -160,6 +438,7 @@ export default function ContractWorkspace() {
                 onApproveWork={handleApproveWork}
                 onRejectWork={handleRejectWork}
                 onFreelancerCancel={handleFreelancerCancel}
+                onRefundIfDeadlineMissed={handleRefundIfDeadlineMissed}
               />
             )}
             {activeTab === "Messages" && (

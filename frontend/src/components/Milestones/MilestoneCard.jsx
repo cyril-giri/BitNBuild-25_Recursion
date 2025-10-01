@@ -36,7 +36,7 @@ const DeliverableLink = ({ deliverable, isClient }) => {
 };
 
 
-export default function MilestoneCard({ milestone, isClient, role, onApproveWork, onRejectWork, onFreelancerCancel, onSubmitDeliverable, onFund }) {
+export default function MilestoneCard({ milestone, isClient, role, onApproveWork, onRejectWork, onFreelancerCancel, onSubmitDeliverable, onFund, onRefundIfDeadlineMissed }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { title, description, amount, due_date, status, escrow, deliverables } = milestone;
 
@@ -56,7 +56,7 @@ export default function MilestoneCard({ milestone, isClient, role, onApproveWork
   const ActionButtons = () => {
     if (isClient) {
       if (status === 'pending') {
-        return <button onClick={() => onFund(milestone.id)} className="bg-cyan-500 text-black text-xs font-bold py-1 px-3 rounded">Fund Milestone</button>;
+        return <button onClick={() => onFund(milestone)} className="bg-cyan-500 text-black text-xs font-bold py-1 px-3 rounded">Fund Milestone</button>;
       }
       if (status === 'delivered') {
         return (
@@ -75,6 +75,16 @@ export default function MilestoneCard({ milestone, isClient, role, onApproveWork
       }
       if (escrowStatus === 'funded' && status !== 'delivered') {
         return <button onClick={() => onFreelancerCancel(milestone.id)} className="bg-neutral-700 hover:bg-neutral-600 text-white text-xs font-bold py-1 px-3 rounded">Cancel Milestone</button>;
+      }
+      if (status === 'funded' && new Date() > new Date(due_date)) {
+        return (
+          <button
+            onClick={() => onRefundIfDeadlineMissed(milestone.id)}
+            className="bg-yellow-700 hover:bg-yellow-800 text-white text-xs font-bold py-1 px-3 rounded"
+          >
+            Refund (Deadline Missed)
+          </button>
+        );
       }
     }
     return null;

@@ -50,23 +50,7 @@ export default function PostProject() {
     error,
     refetch: postProject,
   } = useApi({
-    fetchFn: async () => {
-      const projectData = {
-        client_id: profile.id,
-        title: form.title,
-        short_description: form.short_description,
-        description: form.description,
-        category: form.category,
-        subcategory: form.subcategory,
-        budget_min: Number(form.budget_min),
-        budget_max: Number(form.budget_max),
-        payment_type: form.payment_type,
-        deadline: form.deadline,
-        skills_required: form.skills_required.split(",").map((s) => s.trim()),
-        location: form.location,
-        visibility: form.visibility,
-        attachments: form.attachments,
-      };
+    fetchFn: async (projectData) => {
       return await supabase.from("projects").insert([projectData]);
     },
     manual: true,
@@ -101,8 +85,25 @@ export default function PostProject() {
       alert("You must be logged in to post a project.");
       return;
     }
-    
-    const result = await postProject();
+
+    const projectData = {
+      client_id: profile.id,
+      title: form.title,
+      short_description: form.short_description,
+      description: form.description,
+      category: form.category,
+      subcategory: form.subcategory,
+      budget_min: Number(form.budget_min),
+      budget_max: Number(form.budget_max),
+      payment_type: form.payment_type,
+      deadline: form.deadline || null,
+      skills_required: form.skills_required.split(",").map((s) => s.trim()),
+      location: form.location,
+      visibility: form.visibility,
+      attachments: form.attachments,
+    };
+
+    const result = await postProject(projectData);
 
     if (result.error) {
       if (form.attachments.length > 0) {
