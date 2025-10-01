@@ -28,9 +28,10 @@ Develop **GigCampus**, a platform that:
 - **Student freelancers** can browse projects and place competitive bids, submitting a proposal and price.
 - **Bidding UI**: Projects, bids, and proposals are managed via intuitive dashboards.
 
-### 2. Secure Payment Escrow
-- **Escrow system**: Client’s payment is held securely when a bid is accepted.
-- **Release on approval**: Funds are released to the freelancer only after the client marks the project as complete.
+### 2. Secure On-Chain Payment Escrow (Sepolia Testnet, USDC)
+- **Smart contract escrow**: When a bid is accepted, an on-chain escrow contract is deployed for the project.
+- **USDC payments**: All milestone payments are handled in USDC on the Sepolia testnet.
+- **Release on approval**: Funds are released to the freelancer only after the client marks the milestone as complete.
 - **Trust**: Ensures both parties are protected throughout the project lifecycle.
 
 ### 3. Integrated Real-Time Chat with File Sharing
@@ -48,6 +49,7 @@ Develop **GigCampus**, a platform that:
 
 - **Frontend**: React (Vite), Tailwind CSS
 - **Backend**: Supabase (Postgres, Auth, Storage, Realtime)
+- **Smart Contracts**: Solidity (Escrow, Sepolia testnet, USDC)
 - **State Management**: React Context API
 - **Routing**: React Router
 - **Other**: Lucide Icons, Custom Hooks
@@ -90,9 +92,9 @@ frontend/
 - Register/login as a client
 - Post a project with requirements and budget
 - Review bids from student freelancers
-- Accept a bid (escrow funds are held)
+- Accept a bid (escrow contract is deployed, funds are held on-chain)
 - Chat with freelancer, manage milestones and deliverables
-- Approve work and release payment
+- Approve work and release payment (on-chain)
 - Leave a review
 
 ### 2. **Freelancer Flow**
@@ -110,9 +112,9 @@ frontend/
 
 - **Project Marketplace**: Browse, post, and bid on projects
 - **Bidding System**: Submit and manage bids
-- **Contracts & Milestones**: Track project progress and payments
+- **Contracts & Milestones**: Track project progress and payments (on-chain)
 - **Deliverables**: Upload and review work for each milestone
-- **Escrow Payments**: Secure, conditional fund release
+- **Escrow Payments**: Secure, conditional fund release (on-chain, USDC)
 - **Chat**: Real-time messaging and file sharing
 - **Portfolio & Reviews**: Showcase work and build trust
 
@@ -123,10 +125,57 @@ frontend/
 - **users / profiles**: Auth, roles, and profile info
 - **projects**: Project postings
 - **bids**: Bids on projects
-- **contracts**: Accepted bids, project agreements
+- **contracts**: Accepted bids, project agreements, escrow contract address
 - **milestones**: Project phases, funding, and deliverables
 - **deliverables**: Files and notes submitted for milestones
 - **reviews**: Ratings and feedback
+
+---
+
+## 🔗 Smart Contract Integration (Sepolia Testnet, USDC)
+
+### **How to Use On-Chain Escrow**
+
+1. **Install MetaMask**  
+   Download and install [MetaMask](https://metamask.io/) for your browser.
+
+2. **Create a MetaMask Account**  
+   - Open MetaMask and follow the instructions to create a new wallet/account.
+   - Save your recovery phrase securely.
+
+3. **Add Sepolia Testnet to MetaMask**  
+   - Open MetaMask, click your account icon > Settings > Networks > Add Network.
+   - Network Name: `Sepolia`
+   - RPC URL: `https://rpc.sepolia.org`
+   - Chain ID: `11155111`
+   - Currency Symbol: `ETH`
+   - Block Explorer: `https://sepolia.etherscan.io`
+   - Or, select Sepolia from the default test networks list.
+
+4. **Get Sepolia ETH (for gas fees)**  
+   - Use a [Sepolia faucet](https://sepoliafaucet.com/) to get free testnet ETH.
+
+5. **Mint Sepolia USDC (Testnet)**
+   - Visit a [USDC Sepolia faucet](https://faucet.circle.com/) and connect your wallet.
+   - Mint test USDC tokens to your MetaMask account.
+
+6. **Import USDC Token in MetaMask**
+   - Open MetaMask, go to "Assets", click "Import Tokens".
+   - Token contract address:  
+     ```
+     0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+     ```
+   - Token symbol: `USDC`
+   - Decimals: `6`
+   - Click "Add Custom Token" and "Import Tokens".
+
+7. **Connect Your Wallet in GigCampus**
+   - On the contract workspace page, click "Connect Wallet".
+   - Make sure you are on Sepolia and have USDC and ETH for gas.
+
+8. **Use On-Chain Escrow**
+   - When a contract is created, an escrow contract is deployed on-chain.
+   - All milestone payments, approvals, and refunds are handled via the smart contract using USDC.
 
 ---
 
