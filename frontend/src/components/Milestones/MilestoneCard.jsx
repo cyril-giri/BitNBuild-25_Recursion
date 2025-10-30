@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import SubmitWorkModal from '../Dileverables/SubmitWorkModal';
 
 
-const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+const formatCurrency = (amountSmallestUnit) => {
+  if (amountSmallestUnit == null) return "";
+  const amount = Number(amountSmallestUnit) / 1_000_000; // convert USDC smallest unit -> USDC
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+};
 
 // A component to display a link to a single deliverable file
 const DeliverableLink = ({ deliverable, isClient }) => {
